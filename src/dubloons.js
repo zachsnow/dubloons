@@ -2,7 +2,6 @@
   'use strict';
 
   var _ = require('lodash');
-  var process = require('process');
   var util = require('util');
   var path = require('path');
   var fs = require('fs');
