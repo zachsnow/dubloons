@@ -7,42 +7,37 @@ A toy slackbot I wrote for [FareHarbor](https://fareharbor.com/).
 
 ```
 # dubloons.conf
-announcements: #channel
+announcements: #general
 icon: ":tada:"
 
-bankers:
-  - @user
-  - @user
-
-joint-accounts:
-  team1:
-    - @user
-    - @user
-  team2:
-    - @user
-  team3:
-    - @user
-    - @user
-    - @user
+bankers: @group
+groups:
+  - @product
+  - @sales
 ```
 
 # Usage:
 
-* `/dubloons give [N] to @user`
+* `/dubloons give $N to @user`
 
-Give `N` dubloons to `@user`; the current user must
-be a Dubloons banker.
+Give `$N` new dubloons to `@user`; only available to bankers.
 
-* `/dubloons balances [N]`
+* `/dubloons pay $N to @user`
 
-Show balances of top `N` users and teams.
+Send `$N` dubloons of your dubloons to `@user`.
 
-* `/dubloons balance [@user]`
+* `/dubloons balances`
 
-Show your balance; if you are a banker you can optionally
-pass a separate `@user` and show their balance.
+Show balances of top users and groups.
 
-`/dubloons spend [N] [@user]`
+* `/dubloons balance [of @user]`
 
-Spend `N` dubloons; if you are a banker you can optionally
-pass a separate `@user` and spend *their* dubloons instead.
+Show your balance; you can optionally pass a separate `@user` to show their balance.
+
+# Announcements:
+
+When a user receives (via `/dubloons give` or `/dubloons pay`) it is announced in the `announcements`
+channel (configured in `dubloons.conf`).
+
+Hourly balance summaries for the top users and groups (equivalent of `/dubloons balances`) are posted
+in the `announcements` channel as well.
