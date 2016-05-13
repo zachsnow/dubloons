@@ -14,7 +14,7 @@
       announcements: '#general',
       welcome: "Aloha and welcome to Dubloons!",
 
-      database: path.resolve(__dirname, '..', 'conf', 'dubloons.db'),
+      database: path.resolve('./dubloons.db'),
       icon: ':moneybag:',
       bankers: [],
       groups: []
