@@ -1,0 +1,21 @@
+{
+  "name": "dubloons",
+  "version": "0.0.1",
+  "description": "Dubloons: a slackbot for fun @ FareHarbor",
+  "main": "src/dubloons.js",
+  "scripts": {
+    "test": "echo \"Error: no tests specified\" && exit 1"
+  },
+  "keywords": [
+    "slackbot"
+  ],
+  "author": "Zach Snow",
+  "license": "MIT",
+  "dependencies": {
+    "js-yaml": "^3.6.0",
+    "lodash": "^4.12.0",
+    "node-cron": "^1.1.0",
+    "slackbots": "^0.5.1",
+    "sqlite3": "^3.1.3"
+  }
+}
