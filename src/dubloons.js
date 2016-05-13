@@ -23,18 +23,14 @@
     this.user = null;
     this.db = null;
 
-    var improperlyConfigured = false;
-    if(!this.options.channel){
-      console.error('dubloons: improperly configured -- no bankers specified');
-      improperlyConfigured = true;
+    if(!this.options.announcements){
+      throw new Error('improperly configured -- no announcements channel specified');
     }
-    if(!this.options.bankers || !this.options.bankers.length){
-      console.error('dubloons: improperly configured -- no bankers specified');
-      improperlyConfigured = true;
+    if(!this.options.bankers){
+      throw new Error('improperly configured -- no bankers group specified');
     }
-
-    if(improperlyConfigured){
-      process.exit(1);
+    if(!this.options.token){
+      throw new Error('improperly configured -- no Slack token specified');
     }
   };
   util.inherits(DubloonsBot, Bot);
@@ -129,8 +125,7 @@
     var bot = this;
 
     if(!fs.existsSync(bot.options.database)){
-      console.error('dubloons: invalid database path ' + bot.options.database);
-      process.exit(1);
+      throw new Error('invalid database path ' + bot.options.database);
     }
     bot.db = new SQLite.Database(this.options.database);
   };
