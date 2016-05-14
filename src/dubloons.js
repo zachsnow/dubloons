@@ -2,11 +2,10 @@
   'use strict';
 
   var _ = require('lodash');
-  var util = require('util');
   var path = require('path');
   var fs = require('fs');
-  var SQLite = require('sqlite3').verbose();
-  var Bot = require('slackbots');
+  var Botkit = require('botkit');
+  var vow = require('vow');
 
   var DubloonsBot = function Constructor(options) {
     this.options = _.extend({
@@ -17,7 +16,10 @@
       database: path.resolve('./dubloons.db'),
       icon: ':moneybag:',
       bankers: [],
-      groups: []
+      groups: [],
+      usage: "Usage:\n\n" +
+        "  `@dubloons: balances` - display balances\n" +
+        "  `@dubloons: help` - display this message\n"
     }, options);
 
     this.user = null;
@@ -33,41 +35,51 @@
       throw new Error('improperly configured -- no Slack token specified');
     }
   };
-  util.inherits(DubloonsBot, Bot);
 
   DubloonsBot.prototype.run = function(){
     var bot = this;
 
-    DubloonsBot.super_.call(bot, bot.options);
+    var controller = Botkit.slackbot({
+      debug: bot.options.debug,
+      log: bot.options.debug || false
+    });
 
-    bot.on('start', bot.onStart);
-    bot.on('message', bot.onMessage);
+    bot.slackbot = controller.spawn({
+      token: bot.options.token
+    });
+
+    controller.on('direct_mention', function(slackbot, message){
+      bot._processMessage(slackbot, message);
+    });
+
+    controller.on('channel_joined', function(slackbot, channel){
+
+    });
+
+    bot.slackbot.api.channels.list({exclude_archived: 1}, function(err, res) {
+      var channelName = bot.options.announcements.substr(1);
+      var channel = _.find(res.channels, function(channel){
+        return channel.name === channelName;
+      });
+      if(!channel){
+        throw new Error('improperly configured -- invalid announcements channel');
+      }
+      bot.options.announcements = channel.id;
+
+      bot.slackbot.startRTM(function(){
+        console.info('dubloons: started RTM');
+        bot._displayWelcome();
+      });
+    });
   };
 
-  DubloonsBot.prototype.onStart = function(){
+  DubloonsBot.prototype._processMessage = function(slackbot, message){
     var bot = this;
 
-    bot.db = bot._connectDatabase();
-    bot.user = bot._loadBotUser();
+    console.info('dubloons: received message', message);
+    var text = message.text;
+    var user = message.user;
 
-    return bot._displayWelcome();
-  };
-
-  DubloonsBot.prototype.onMessage = function(message){
-    var bot = this;
-
-    if(message.type !== 'message'){
-      return;
-    }
-    if(!message.text){
-      return;
-    }
-
-    return bot._processMessage(message.text);
-  };
-
-  DubloonsBot.prototype._processMessage = function(message){
-    var bot = this;
     var commands = [
       {
         re: /^\s+(give)\s+(\d+)\s+(to)\s+(@[a-z]+)\s+$/,
@@ -101,49 +113,44 @@
       }
     ];
 
-    _.forEach(commands, function(command){
-      var match = command.re.exec(message);
+    var command = _.find(commands, function(command){
+      var match = command.re.exec(text);
       if(match){
         var args = _.map(command.args, function(arg){
           return match.group(arg);
         });
+        args.push(user);
         try {
-          return command.method.call(bot, args);
+          command.method.call(bot, args);
+          return true;
         }
         catch(e){
-          return bot._displayUsage('What I say what in tarnation?');
+          bot._displayUsage(user, 'What I say what in tarnation?');
         }
       }
     });
 
-    return bot._post("Ho brah!").then(function(){
-      return bot._displayUsage();
-    });
-  };
-
-  DubloonsBot.prototype._connectDatabase = function(){
-    var bot = this;
-
-    if(!fs.existsSync(bot.options.database)){
-      throw new Error('invalid database path ' + bot.options.database);
+    if(!command){
+      bot.post("Ho brah!", user).then(function(){
+        return bot._displayUsage(user);
+      });
     }
-    bot.db = new SQLite.Database(this.options.database);
   };
 
   DubloonsBot.prototype.post = function(message, user){
     var bot = this;
+    var deferred = vow.defer();
 
-    var method = user ?
-      bot.postMessageToUser :
-      bot.postMessageToChannel;
-
-    var destination = user ?
-      user :
-      bot.options.announcements;
-
-    return method(destination, message, {
-      icon_emoji: bot.options.icon
+    console.info('dubloons: sending', message, 'to', user);
+    bot.slackbot.say({
+      text: message,
+      channel: user ? user : bot.options.announcements,
+      icon_emoji: this.options.icon
+    }, function(){
+      deferred.resolve();
     });
+
+    return deferred.promise();
   };
 
   /////////////////////////////////////////////////////////////////////
@@ -151,14 +158,7 @@
   /////////////////////////////////////////////////////////////////////
   DubloonsBot.prototype._displayWelcome = function(){
     var bot = this;
-
-    return bot.post(bot.options.welcome).then(function(){
-      return bot._displayBankers();
-    }).then(function(){
-      return bot._displayGroupBalances();
-    }).then(function(){
-      return bot._displayUserBalances();
-    });
+    bot.post(bot.options.welcome);
   };
 
   DubloonsBot.prototype._displayBankers = function(){
@@ -221,7 +221,7 @@
   };
 
 
-  DubloonsBot.prototype._displayUsage = function(error){
+  DubloonsBot.prototype._displayUsage = function(user, error){
     var bot = this;
 
     var message = bot.options.usage;
@@ -229,7 +229,7 @@
       message = "*" + error + "*\n\n" + message;
     }
 
-    return bot.post(message)
+    bot.post(message, user);
   };
 
   /////////////////////////////////////////////////////////////////////
