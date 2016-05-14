@@ -3,10 +3,17 @@ Dubloons
 
 A toy slackbot I wrote for [FareHarbor](https://fareharbor.com/).
 
+# Installation:
+
+```
+$ npm install
+```
+
 # Configuration:
 
 ```
 # dubloons.conf
+token: <SLACK TOKEN>
 announcements: #general
 icon: ":tada:"
 
@@ -16,7 +23,13 @@ groups:
   - @sales
 ```
 
-# Usage:
+# Running:
+
+```
+$ node bin/index.js [ CONFIG ] [ --debug ]
+```
+
+# Bot Usage:
 
 * `/dubloons give $N to @user`
 
