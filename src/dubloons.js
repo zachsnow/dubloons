@@ -78,6 +78,26 @@
     });
   };
 
+  DubloonsBot.prototype._getUserId = function(username){
+    var bot = this;
+    var deferred = vow.defer();
+    
+    username = username.replace(/^@/, '');
+
+    bot.slackbot.api.users.list({}, function(err, res) {
+      if(err){
+        return deferred.reject(err);
+      }
+
+      var user = _.find(res.members, function(user){
+        return user.name === username;
+      });
+      deferred.resolve(user.id);
+    });
+
+    return deferred.promise();
+  };
+
   DubloonsBot.prototype._processMessage = function(slackbot, message){
     var bot = this;
 
