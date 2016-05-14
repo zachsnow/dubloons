@@ -19,7 +19,9 @@
       groups: [],
       usage: "Usage:\n\n" +
         "  `@dubloons: balances` - display balances\n" +
-        "  `@dubloons: help` - display this message\n"
+        "  `@dubloons: help` - display this message\n",
+      errorMessage: "What's it all about boy, elucidate!",
+      unknownMessage: "What I say what in tarnation?"
     }, options);
 
     this.user = null;
@@ -125,15 +127,14 @@
           return true;
         }
         catch(e){
-          bot._displayUsage(user, 'What I say what in tarnation?');
+          console.error('dubloons: error executing command', text, e);
+          bot._displayUsage(user, bot.options.errorMessage);
         }
       }
     });
 
     if(!command){
-      bot.post("Ho brah!", user).then(function(){
-        return bot._displayUsage(user);
-      });
+      bot._displayUsage(user, bot.options.unknownMessage);
     }
   };
 
