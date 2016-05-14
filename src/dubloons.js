@@ -238,12 +238,30 @@
   /////////////////////////////////////////////////////////////////////
   DubloonsBot.prototype._give = function(dubloons, toUser, user){
     var bot = this;
-    return bot.post("give: not implemented");
+
+    var toBalance = bot._getUserBalance(toUser);
+    toBalance += dubloons;
+    bot._setUserBalance(toBalance, toUser);
+
+    bot.post(fromUser + " gave " + toUser + " " + dubloons.toString() + " dubloons! :tada:");
   };
 
   DubloonsBot.prototype._pay = function(dubloons, toUser, user){
     var bot = this;
-    return bot.post("pay: not implemented", user);
+    var fromBalance = bot._getUserBalance(user);
+    var toBalance = bot._getUserBalance(toUser);
+
+    if(fromBalance < dubloons){
+      bot.post("You don't have enough dubloons!", user);
+      return;
+    }
+
+    fromBalance -= dubloons;
+    toBalance += dubloons;
+    bot._setUserBalance(fromBalance, fromUser);
+    bot._setUserBalance(toBalance, toUser);
+
+    bot.post(fromUser + " paid " + toUser + " " + dubloons.toString() + " dubloons! :tada:");
   };
 
   DubloonsBot.prototype._balances = function(user){
@@ -253,12 +271,14 @@
 
   DubloonsBot.prototype._balance = function(user){
     var bot = this;
-    return bot.post("balance: not implemented", user);
+    var balance = bot._getUserBalance(user);
+    bot.post("You have " + balance + " dubloons.");
   };
 
   DubloonsBot.prototype._userBalance = function(ofUser, user){
     var bot = this;
-    return bot.post("balance: not implemented", user);
+    var balance = bot._getUserBalance(ofUser);
+    bot.post(user + " has " + balance + " dubloons.");
   };
 
   DubloonsBot.prototype._usage = function(user){
@@ -273,12 +293,12 @@
     return 0;
   };
 
-  DubloonsBot.prototype._setUserBalance = function(user){
-    return 0;
+  DubloonsBot.prototype._setUserBalance = function(dubloons, user){
+    return dubloons;
   };
 
   DubloonsBot.prototype._getGroupBalance = function(user){
-
+    return 0;
   };
 
   module.exports = DubloonsBot;
