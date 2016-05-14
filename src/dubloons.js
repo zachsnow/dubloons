@@ -43,12 +43,15 @@
 
     var controller = Botkit.slackbot({
       debug: bot.options.debug,
-      log: bot.options.debug || false
+      log: bot.options.debug || false,
+      json_file_store: bot.options.database
     });
 
     bot.slackbot = controller.spawn({
       token: bot.options.token
     });
+
+    bot.db = controller.storage;
 
     controller.on('direct_mention', function(slackbot, message){
       bot._processMessage(slackbot, message);
@@ -299,6 +302,40 @@
 
   DubloonsBot.prototype._getGroupBalance = function(user){
     return 0;
+  };
+
+  DubloonsBot.prototype._getUserData = function(userId, key, defaultValue){
+    var bot = this;
+    var deferred = vow.defer();
+
+    bot.db.users.get(userId, function(err, data){
+      if(!data || !_.has(data, key)){
+        return deferred.resolve(defaultValue);
+      }
+      deferred.resolve(data[key]);
+    });
+
+    return deferred.promise();
+  };
+
+  DubloonsBot.prototype._setUserData = function(userId, key, value){
+    var bot = this;
+    var deferred = vow.defer();
+
+    bot.db.users.get(userId, function(err, data){
+      data = data || {id: userId};
+      data[key] = value;
+
+      bot.db.users.save(data, function(err){
+        if(err){
+          return deferred.reject(error);
+        }
+
+        deferred.resolve();
+      });
+    });
+
+    return deferred.promise();
   };
 
   module.exports = DubloonsBot;
