@@ -141,7 +141,8 @@
     var bot = this;
     var deferred = vow.defer();
 
-    console.info('dubloons: sending', message, 'to', user);
+    console.info('dubloons: sending', message, 'to', user || 'announcements');
+
     bot.slackbot.say({
       text: message,
       channel: user ? user : bot.options.announcements,
@@ -261,6 +262,7 @@
   };
 
   DubloonsBot.prototype._usage = function(user){
+    var bot = this;
     return bot._displayUsage(user);
   };
 
