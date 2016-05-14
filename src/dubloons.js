@@ -78,38 +78,37 @@
   DubloonsBot.prototype._processMessage = function(slackbot, message){
     var bot = this;
 
-    console.info('dubloons: received message', message);
     var text = message.text;
     var user = message.user;
 
     var commands = [
       {
-        re: /^\s+(give)\s+(\d+)\s+(to)\s+(@[a-z]+)\s+$/,
+        re: /^\s*(give)\s+(\d+)\s+(to)\s+(@[a-z]+)\s*$/,
         method: bot._give,
         args: [ 2, 4 ]
       },
       {
-        re: /^\s+(pay)\s+(\d+)\s+(to)\s+(@[a-z]+)\s+$/,
+        re: /^\s*(pay)\s+(\d+)\s+(to)\s+(@[a-z]+)\s*$/,
         method: bot._pay,
         args: [ 2, 4 ]
       },
       {
-        re: /^\s+(balances)\s+$/,
+        re: /^\s*(balances)\s*$/,
         method: bot._balances,
         args: []
       },
       {
-        re: /^\s+(balance)\s+$/,
+        re: /^\s*(balance)\s*$/,
         method: bot._balance,
         args: []
       },
       {
-        re: /^\s+(balance)\s+(of)\s+(@[a-z]+)\s+$/,
+        re: /^\s*(balance)\s+(of)\s+(@[a-z]+)\s*$/,
         method: bot._userBalance,
         args: [ 3 ]
       },
       {
-        re: /^\s+(usage|help)\s+$/,
+        re: /^\s*(usage|help)\s*$/,
         method: bot._usage,
         args: []
       }
@@ -123,7 +122,7 @@
         });
         args.push(user);
         try {
-          command.method.call(bot, args);
+          command.method.apply(bot, args);
           return true;
         }
         catch(e){
