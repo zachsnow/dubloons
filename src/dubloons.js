@@ -78,22 +78,52 @@
     });
   };
 
+  DubloonsBot.prototype._getUsers = function(){
+    var bot = this;
+    var deferred = vow.defer();
+
+    bot.slackbot.api.users.list({}, function(err, res) {
+      if(err){
+        return deferred.reject(err);
+      }
+      deferred.resolve(res.members);
+    });
+
+    return deferred.promise();
+  };
+
+  DubloonsBot.prototype._findUser = function(users, key, value){
+    return _.find(users, function(user){
+      return user[key] === value;
+    });
+  };
+
+  DubloonsBot.prototype._findUserById = function(users, userId){
+    var bot = this;
+    return bot._findUser(users, 'id', userId);
+  };
+
+  DubloonsBot.prototype._findUserByName = function(users, username){
+    var bot = this;
+    username = username.replace(/^@/, '');
+    return bot._findUser(users, 'name', username);
+  };
+
   DubloonsBot.prototype._getUserId = function(username){
     var bot = this;
     var deferred = vow.defer();
     
     username = username.replace(/^@/, '');
 
-    bot.slackbot.api.users.list({}, function(err, res) {
-      if(err){
-        return deferred.reject(err);
+    bot._getUsers().then(function(users){
+      var user = bot._findUserByName(users, username);
+      
+      if(!user){
+        deferred.reject();
       }
 
-      var user = _.find(res.members, function(user){
-        return user.name === username;
-      });
       deferred.resolve(user.id);
-    });
+    }, deferred.reject);
 
     return deferred.promise();
   };
@@ -259,14 +289,19 @@
   /////////////////////////////////////////////////////////////////////
   // Command implementations.
   /////////////////////////////////////////////////////////////////////
-  DubloonsBot.prototype._give = function(dubloons, toUser, user){
+  DubloonsBot.prototype._give = function(dubloons, toUsername, userId){
     var bot = this;
-
-    var toBalance = bot._getUserBalance(toUser);
-    toBalance += dubloons;
-    bot._setUserBalance(toBalance, toUser);
-
-    bot.post(fromUser + " gave " + toUser + " " + dubloons.toString() + " dubloons! :tada:");
+    var toUser, fromUser;
+    bot._getUsers().then(function(users){
+      toUser = bot._findUserByName(users, toUsername);
+      fromUser = bot._findUserById(users, userId);
+      return bot._getUserBalance(toUser.id);
+    }).then(function(balance){
+      balance += dubloons;
+      return bot._setUserBalance(balance, toUser.id);
+    }).then(function(){
+      bot.post("@" + fromUser.name + " gave " + toUsername + " " + dubloons.toString() + " dubloons! :tada:");
+    });
   };
 
   DubloonsBot.prototype._pay = function(dubloons, toUser, user){
@@ -299,10 +334,13 @@
     });
   };
 
-  DubloonsBot.prototype._userBalance = function(ofUser, user){
+  DubloonsBot.prototype._userBalance = function(forUsername, userId){
     var bot = this;
-    var balance = bot._getUserBalance(ofUser);
-    bot.post(user + " has " + balance + " dubloons.");
+    bot._getUserId(forUsername).then(function(forUserId){
+      return bot._getUserBalance(forUserId);
+    }).then(function(balance){
+      bot.post(forUsername + " has " + balance + " dubloons.");
+    });
   };
 
   DubloonsBot.prototype._usage = function(user){
