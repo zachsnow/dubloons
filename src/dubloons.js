@@ -313,11 +313,13 @@
   // DB accessors.
   /////////////////////////////////////////////////////////////////////
   DubloonsBot.prototype._getUserBalance = function(user){
-    return 0;
+    var bot = this;
+    return bot._getUserData(user, 'balance', 0);
   };
 
   DubloonsBot.prototype._setUserBalance = function(dubloons, user){
-    return dubloons;
+    var bot = this;
+    return bot._setUserData(user, 'balance', dubloons);
   };
 
   DubloonsBot.prototype._getGroupBalance = function(user){
