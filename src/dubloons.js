@@ -292,10 +292,11 @@
     return bot.post("balances: not implemented", user);
   };
 
-  DubloonsBot.prototype._balance = function(user){
+  DubloonsBot.prototype._balance = function(userId){
     var bot = this;
-    var balance = bot._getUserBalance(user);
-    bot.post("You have " + balance + " dubloons.");
+    bot._getUserBalance(userId).then(function(balance){
+      bot.post("You have " + balance + " dubloons.");
+    });
   };
 
   DubloonsBot.prototype._userBalance = function(ofUser, user){
