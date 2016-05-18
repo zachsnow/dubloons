@@ -106,6 +106,7 @@
   DubloonsBot.prototype._findUserByName = function(users, username){
     var bot = this;
     username = username.replace(/^@/, '');
+    username = username.toLowerCase();
     return bot._findUser(users, 'name', username);
   };
 
