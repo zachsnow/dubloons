@@ -112,8 +112,6 @@
   DubloonsBot.prototype._getUserId = function(username){
     var bot = this;
     var deferred = vow.defer();
-    
-    username = username.replace(/^@/, '');
 
     bot._getUsers().then(function(users){
       var user = bot._findUserByName(users, username);
