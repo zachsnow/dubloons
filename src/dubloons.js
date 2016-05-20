@@ -303,22 +303,36 @@
     });
   };
 
-  DubloonsBot.prototype._pay = function(dubloons, toUser, user){
+  DubloonsBot.prototype._pay = function(dubloons, toUsername, userId){
     var bot = this;
-    var fromBalance = bot._getUserBalance(user);
-    var toBalance = bot._getUserBalance(toUser);
+    var toUser, fromUser, toBalance, fromBalance;
 
-    if(fromBalance < dubloons){
-      bot.post("You don't have enough dubloons!", user);
-      return;
-    }
+    bot._getUsers().then(function(users){
+      toUser = bot._findUserByName(users, toUsername);
+      fromUser = bot._findUserById(users, userId);
 
-    fromBalance -= dubloons;
-    toBalance += dubloons;
-    bot._setUserBalance(fromBalance, fromUser);
-    bot._setUserBalance(toBalance, toUser);
+      return bot._getUserBalance(fromUser.id);
+    }).then(function(balance){
+      fromBalance = balance;
 
-    bot.post(fromUser + " paid " + toUser + " " + dubloons.toString() + " dubloons! :tada:");
+      if(fromBalance < dubloons){
+        bot.post("You don't have enough dubloons!", userId);
+        return;
+      }
+
+      bot._getUserBalance(toUser.id).then(function(balance){
+        toBalance = balance;
+
+        toBalance += dubloons;
+        fromBalance -= dubloons;
+
+        return bot._setUserBalance(fromBalance, fromUser.id);
+      }).then(function(){
+        return bot._setUserBalance(toBalance, toUser.id);
+      }).then(function(){
+        bot.post("@" + fromUser.name + " paid " + toUsername + " " + dubloons.toString() + " dubloons! :tada:");
+      });
+    });
   };
 
   DubloonsBot.prototype._balances = function(user){
